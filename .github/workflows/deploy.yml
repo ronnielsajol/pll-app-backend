@@ -10,26 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
-
-      - name: Trust host
+      - name: Write SSH key & trust host
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
           ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
 
       - name: Pull + Laravel maintenance
         env:
-          PHP_BIN: ${{ secrets.PHP_BIN }}
+          PHP_BIN: ${{ secrets.PHP_BIN }} # e.g. /usr/local/bin/php
         run: |
-          ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
+          ssh -i ~/.ssh/prod_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
           set -e
           cd "${PROD_REMOTE_PATH:-/home/jhtewsbw2mz0/public_html/pll-app.asc-nest.org}"
 
+          # Get latest code exactly (no merges)
           git fetch origin main
           git reset --hard origin/main
+
+          # Keep uploads, vendor, env, and host-managed dirs
           git clean -fdx \
             -e storage \
             -e vendor \
@@ -37,12 +37,17 @@ jobs:
             -e cgi-bin \
             -e public/.well-known
 
+          # Composer if available on server
           if [ -f composer.phar ]; then
             ${PHP_BIN:-/usr/local/bin/php} composer.phar install --no-dev --prefer-dist --optimize-autoloader
           elif command -v composer >/dev/null 2>&1; then
             composer install --no-dev --prefer-dist --optimize-autoloader
           fi
 
+          # Ensure host dirs exist (in case)
+          mkdir -p cgi-bin public/.well-known
+
+          # Safe Laravel housekeeping
           ${PHP_BIN:-/usr/local/bin/php} artisan migrate --force || true
           ${PHP_BIN:-/usr/local/bin/php} artisan config:cache
           ${PHP_BIN:-/usr/local/bin/php} artisan route:cache
