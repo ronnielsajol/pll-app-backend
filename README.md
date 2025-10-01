@@ -129,7 +129,7 @@ curl -X GET http://localhost:8000/api/user \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
-## 🧪 Testing
+## 🧪 Testinggg
 
 Run the test suite:
 
