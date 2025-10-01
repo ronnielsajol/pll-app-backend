@@ -146,6 +146,22 @@ This project includes automated deployment to GoDaddy hosting via GitHub Actions
 3. **Cache optimization** - Optimizes application performance
 4. **Database migrations** - Runs any pending migrations
 
+### 🔧 Deployment Setup
+
+**If you're seeing SSH authentication errors:**
+
+-   See [SSH-TROUBLESHOOTING.md](SSH-TROUBLESHOOTING.md) for detailed solutions
+-   Use SSH key authentication (recommended) instead of passwords
+-   Verify your GoDaddy hosting includes SSH access
+
+**Required GitHub Secrets:**
+
+-   `GODADDY_HOST` - Your server IP or domain
+-   `GODADDY_USERNAME` - SSH username
+-   `GODADDY_SSH_KEY` or `GODADDY_PASSWORD` - Authentication
+-   `GODADDY_PORT` - SSH port (usually 22)
+-   `GODADDY_PROJECT_PATH` - Full project path on server
+
 ## 📄 Documentation
 
 -   [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide
